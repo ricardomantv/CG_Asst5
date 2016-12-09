@@ -1,0 +1,16 @@
+All features from the assignment should work as intended.
+
+From the build folder, open human character by running Scotty3D on the human model with:
+./scotty3d ../dae/animation/human.dae
+
+A joint skeleton system can be created to control the character by entering animate mode (A), then dragging the root joint from the origin to the center of the character's pelvis.
+Press C to enter Create Joint mode, and add a joint for bend  points in the human's mesh (hips, knees, ankles, shoulders, elbows, wrists), as well as for the ends of the appendages (toes, fingertips, head).
+To animate, click on a point in the timeline at the bottom of the screen andmove the skeleton either in Pose mode (P), or through IK mode (I) and right clicking after selecting a joint to move.
+Hit Space Bar to see your animation!
+
+Open Scotty3D with the grid mesh to see the wave equation in action:
+./scotty3d ../dae/grid.dae
+
+Enter Animate mode (A) then Wave mode (W), then select either a Forward Euler (F) or Symplectic Euler (S) simulation. Select a vertex on the mesh and raise it, then hit Space Bar to see the simulation run!
+Hold SHIFT -/= before running the simulation to remove/add damping.
+
