@@ -657,6 +657,7 @@
 
         float offset;
         float velocity;
+        float laplacian_ij(VertexIter j) const;
         float laplacian() const;
 
         /**

@@ -143,15 +143,15 @@ void Mesh::backward_euler(float timestep, float damping_factor) {
 
   size_t num_verts = mesh.nVertices();
   VectorXf f0(num_verts); // Vector of original positions
-  VectorXf laps(num_verts); // Vector of laplacian operators
+  // VectorXf laps(num_verts); // Vector of laplacian operators
 
 
   // Populate f0 and laplacian vertices
   size_t index = 0;
   for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
-    float delta_u = v->laplacian() - damping_factor * v->velocity;
+    // float delta_u = v->laplacian() - damping_factor * v->velocity;
     f0(index) = v->offset;
-    laps(index) = delta_u;
+    // laps(index) = delta_u;
     v->be_index = index;
     index++;
   }
@@ -162,20 +162,26 @@ void Mesh::backward_euler(float timestep, float damping_factor) {
 
   for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
     HalfedgeIter hiter = v->halfedge();
+    VertexIter adj_v;
     size_t adj_idx;
     size_t cur_idx = v->be_index;
     do {
-      adj_idx = hiter->next()->vertex()->be_index;
-      lapmat(cur_idx, adj_idx) = laps(adj_idx);
+      adj_v = hiter->next()->vertex();
+      adj_idx = adj_v->be_index;
+      // lapmat(cur_idx, adj_idx) = laps(adj_idx);
+      lapmat(cur_idx, adj_idx) = v->laplacian_ij(adj_v); //  - damping_factor * v->velocity;
       hiter = hiter->next()->next()->twin();
     } while(hiter != v->halfedge());
   }
 
+  // std::cout << lapmat << endl;
+
   MatrixXf A = iden - timestep * lapmat;
-  VectorXf fh = A.householderQr().solve(f0);
+  VectorXf fh = A.partialPivLu().solve(f0);
 
   for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
     v->offset = fh(v->be_index);
+    // v->velocity = v->velocity + timestep * laps(v->be_index);
   }
 }
 
