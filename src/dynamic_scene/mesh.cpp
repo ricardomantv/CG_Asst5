@@ -100,20 +100,9 @@ Mesh::Mesh( Collada::PolymeshInfo& polyMesh, const Matrix4x4& transform)
 
 void Mesh::forward_euler(float timestep, float damping_factor) {
   // Implement Me! (Task 4)
-  /*
-  for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
-    float delta_u = v->laplacian();
-    float v_k1 = v->velocity + timestep * delta_u;
-    float u_k1 = v->offset + timestep * v->velocity;
-
-    v->velocity = v_k1;
-    v->offset = u_k1;
-  }
-  */
 
   vector<float> laps;
   for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
-    // float delta_u = v->laplacian();
     float delta_u = v->laplacian() - damping_factor * v->velocity;
     laps.push_back(delta_u);
   }
@@ -132,19 +121,9 @@ void Mesh::forward_euler(float timestep, float damping_factor) {
 
 void Mesh::symplectic_euler(float timestep, float damping_factor) {
   // Implement Me! (Task 4)
-  /*
-  for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
-    float delta_u = v->laplacian();
-    float v_k1 = v->velocity + timestep * delta_u;
-    float u_k1 = v->offset + timestep * v_k1;
 
-    v->velocity = v_k1;
-    v->offset = u_k1;
-  }
-  */
   vector<float> laps;
   for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
-    // float delta_u = v->laplacian();
     float delta_u = v->laplacian() - damping_factor * v->velocity;
     laps.push_back(delta_u);
   }
@@ -158,6 +137,51 @@ void Mesh::symplectic_euler(float timestep, float damping_factor) {
     v->offset = u_k1;
     index++;
   }
+}
+
+void Mesh::backward_euler(float timestep, float damping_factor) {
+
+  size_t num_verts = mesh.nVertices();
+  VectorXf f0(num_verts); // Vector of original positions
+  VectorXf laps(num_verts); // Vector of laplacian operators
+
+
+  // Populate f0 and laplacian vertices
+  size_t index = 0;
+  for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
+    float delta_u = v->laplacian() - damping_factor * v->velocity;
+    f0(index) = v->offset;
+    laps(index) = delta_u;
+    v->be_index = index;
+    index++;
+  }
+
+  // Build identity and adjacency matrix
+  MatrixXf iden = MatrixXf::Identity(num_verts, num_verts);
+  MatrixXf lapmat = MatrixXf::Zero(num_verts, num_verts);
+
+  for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
+    HalfedgeIter hiter = v->halfedge();
+    size_t adj_idx;
+    size_t cur_idx = v->be_index;
+    do {
+      adj_idx = hiter->next()->vertex()->be_index;
+      lapmat(cur_idx, adj_idx) = laps(adj_idx);
+      hiter = hiter->next()->next()->twin();
+    } while(hiter != v->halfedge());
+  }
+
+  MatrixXf A = iden - timestep * lapmat;
+  VectorXf fh = A.householderQr().solve(f0);
+
+  for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
+    v->offset = fh(v->be_index);
+  }
+}
+
+void Mesh::crank_nicolson(float timestep, float damping_factor) {
+
+
 }
 
 void Mesh::resetWave() {

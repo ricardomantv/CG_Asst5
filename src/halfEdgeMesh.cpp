@@ -658,7 +658,6 @@ namespace CMU462 {
     return edge()->bounds();
   }
 
-  /* TODO */
   float Vertex::laplacian() const
   {
     // Implement Me! (Task 4)

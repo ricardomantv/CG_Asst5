@@ -10,6 +10,9 @@
 
 #include <map>
 
+#include <Eigen/Dense>
+using namespace Eigen;
+
 namespace CMU462 { namespace DynamicScene {
 
 // A structure for holding linear blend skinning information
@@ -58,12 +61,14 @@ class Mesh : public SceneObject {
   void triangulate();
 
   HalfedgeMesh mesh;
-  std::map<Vertex, vector<LBSInfo>> lbs_map; 
+  std::map<Vertex, vector<LBSInfo>> lbs_map;
 
   Skeleton* skeleton; // skeleton for mesh
   void linearBlendSkinning(bool useCapsuleRadius);
   void forward_euler(float timestep, float damping_factor);
   void symplectic_euler(float timestep, float damping_factor);
+  void backward_euler(float timestep, float damping_factor);
+  void crank_nicolson(float timestep, float crank_nicolson);
   void resetWave();
   void keyframe(double t);
   void unkeyframe(double t);

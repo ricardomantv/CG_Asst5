@@ -120,6 +120,7 @@ class Application : public Renderer {
      BoneRadius,
      IK,
      Wave,
+     Heat,
      Object,
      Pose,
      Raytrace_Video,
@@ -130,7 +131,9 @@ class Application : public Renderer {
   enum class Integrator
   {
     Forward_Euler,
-    Symplectic_Euler
+    Symplectic_Euler,
+    Backward_Euler,
+    Crank_Nicolson
   };
   Integrator integrator;
 
@@ -145,6 +148,7 @@ class Application : public Renderer {
   void toggle_bevel_action();
   void toggle_create_joint_action();
   void to_wave_action();
+  void to_heat_action();
   void to_object_action();
   void to_pose_action();
   void cycle_edit_action();
@@ -276,7 +280,7 @@ class Application : public Renderer {
   // Skeleton creation
   DynamicScene::Joint* clickedJoint; // joint that is selected
 
-  // Intersects mouse position x, y in screen coordinates with a plane 
+  // Intersects mouse position x, y in screen coordinates with a plane
   // going through the origin, and returns the intersecting position
   Vector3D getMouseProjection();
 

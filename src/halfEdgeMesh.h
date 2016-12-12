@@ -564,6 +564,11 @@
          */
         Index index;
 
+        /* For Backward Euler update method, used in order to create the
+         * Laplacian matrices based on adjacency.
+         */
+        Index be_index;
+
         /**
          * For Loop subdivision, this flag should be true if and only if this
          * vertex is a new vertex created by subdivision (i.e., if it corresponds
@@ -632,7 +637,7 @@
               Vector3D pk = h->next()->next()->vertex()->position;
               N += cross( pj-pi, pk-pi );
               h = h->next()->twin();
-            } while( h != halfedge() );      
+            } while( h != halfedge() );
           } else {
             do {
               Vector3D pj = h->next()->vertex()->position;

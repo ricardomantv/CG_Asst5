@@ -233,6 +233,12 @@ void Application::render() {
                 case Integrator::Symplectic_Euler:
                   mesh->symplectic_euler(timestep, damping_factor);
                   break;
+                case Integrator::Backward_Euler:
+                  mesh->backward_euler(timestep, damping_factor);
+                  break;
+                case Integrator::Crank_Nicolson:
+                  mesh->crank_nicolson(timestep, damping_factor);
+                  break;
               }
             }
           }
@@ -896,7 +902,7 @@ void Application::keyboard_event( int key, int event, unsigned char mods )
                   DynamicScene::Mesh *m = dynamic_cast<DynamicScene::Mesh*>(scene->selected.object);
                   if (m) m->unkeyframe(t);
 
-                  /* Determine if there are any other objects with knots here 
+                  /* Determine if there are any other objects with knots here
                    * so we can unmark the timeline. */
                   bool remaining = false;
                   for (auto o : scene->objects) {
@@ -921,6 +927,10 @@ void Application::keyboard_event( int key, int event, unsigned char mods )
             break;
           case GLFW_KEY_W:
             to_wave_action();
+            break;
+          // TODO: add action for heat
+          case GLFW_KEY_H:
+            to_heat_action();
             break;
           case GLFW_KEY_Z:
             for (auto o : scene->objects) {
@@ -967,6 +977,16 @@ void Application::keyboard_event( int key, int event, unsigned char mods )
           case GLFW_KEY_S:
             if (event == GLFW_PRESS) {
               integrator = Integrator::Symplectic_Euler;
+            }
+            break;
+          case GLFW_KEY_B:
+            if (event == GLFW_PRESS) {
+              integrator = Integrator::Backward_Euler;
+            }
+            break;
+          case GLFW_KEY_Q:
+            if (event == GLFW_PRESS) {
+              integrator = Integrator::Crank_Nicolson;
             }
             break;
           case GLFW_KEY_K:
@@ -1159,7 +1179,7 @@ void Application::cycle_edit_action()
     setupElementTransformWidget();
   } else {
     scene->elementTransform->cycleMode();
-  }  
+  }
   updateWidgets();
 }
 
@@ -1209,6 +1229,16 @@ void Application::to_wave_action()
   setGhosted(false);
 }
 
+void Application::to_heat_action()
+{
+  scene->elementTransform->exitObjectMode();
+  scene->elementTransform->enterTransformedMode();
+  scene->elementTransform->setTranslate();
+  scene->removeObject(scene->elementTransform);
+  action = Action::Heat;
+  setGhosted(false);
+}
+
 void Application::to_object_action()
 {
   scene->elementTransform->enterObjectMode();
@@ -1241,7 +1271,7 @@ void Application::mouse_pressed(e_mouse_button b) {
         if (timeline.mouse_over(mouseX, mouseY)) {
           timeline.mouse_click(mouseX, mouseY);
           draggingTimeline = true;
-        } 
+        }
         else if (action == Action::CreateJoint) {
           // See if hovered object is a valid mesh or joint.
           DynamicScene::Mesh* mesh = dynamic_cast<DynamicScene::Mesh*>(scene->hovered.object);
@@ -1433,7 +1463,7 @@ void Application::mouse1_dragged(float x, float y) {
       if (scene->has_selection()) {
         double t = timeline.getCurrentFrame();
         dragSelection(x, y, dx, dy, get_world_to_3DH());
-        auto target = (scene->selected.object != scene->elementTransform) ? 
+        auto target = (scene->selected.object != scene->elementTransform) ?
           (scene->selected.object) : (scene->elementTransform->target.object);
 
         if (scene->elementTransform->mode == DynamicScene::XFormWidget::Mode::Translate) {
@@ -1622,7 +1652,7 @@ void Application::rasterize_video() {
   static string videoPrefix;
 
   setGhosted(false);
-  
+
   if (action == Action::Rasterize_Video) {
     char num[32];
     sprintf(num, "%04d", timeline.getCurrentFrame());
@@ -1665,7 +1695,7 @@ void Application::rasterize_video() {
 
 void Application::raytrace_video() {
   static string videoPrefix;
-  
+
   if (action == Action::Raytrace_Video) {
     if (pathtracer->is_done()) {
       char num[32];
@@ -1885,6 +1915,9 @@ void Application::draw_action()
      case ( Action::Wave ):
         actionString << "Wave";
         break;
+     case ( Action::Heat ):
+        actionString << "Heat";
+        break;
      case ( Action::Object ):
         actionString << "Object Transformation";
         break;
@@ -1916,6 +1949,12 @@ void Application::draw_action()
         break;
       case Integrator::Symplectic_Euler:
         integrator_string << "Symplectic Euler";
+        break;
+      case Integrator::Backward_Euler:
+        integrator_string << "Backward Euler";
+        break;
+      case Integrator::Crank_Nicolson:
+        integrator_string << "Crank-Nicolson Scheme";
         break;
     }
     Color integrator_color(0.7, 0.3, 0.7);
