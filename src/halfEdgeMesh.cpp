@@ -690,13 +690,10 @@ namespace CMU462 {
     // Implement Me! (Task 4)
     HalfedgeCIter hiter = this->halfedge();
     float laplacian = 0.0;
-    std::cout << "lap_i: " << this->be_index << endl;
     do {
       VertexCIter j = hiter->next()->vertex();
       VertexCIter a = hiter->next()->next()->vertex();
       VertexCIter b = hiter->twin()->next()->next()->vertex();
-
-      std::cout << "sub_j: " << j->be_index << endl;
 
       Vector3D ia = this->position - a->position;
       Vector3D ib = this->position - b->position;
