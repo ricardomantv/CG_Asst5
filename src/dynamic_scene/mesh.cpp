@@ -143,15 +143,20 @@ void Mesh::backward_euler(float timestep, float damping_factor) {
 
   size_t num_verts = mesh.nVertices();
   VectorXf f0(num_verts); // Vector of original positions
-  VectorXf laps(num_verts); // Vector of laplacian operators
-
+  // VectorXf laps(num_verts); // Vector of laplacian operators
+  // vector<float> laps;
 
   // Populate f0 and laplacian vertices
   size_t index = 0;
   for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
-    float delta_u = v->laplacian() - damping_factor * v->velocity;
-    f0(index) = v->offset;
-    laps(index) = delta_u;
+    // float delta_u = v->laplacian() - damping_factor * v->velocity;
+    if(v->velocity == 0) {
+      f0(index) = timestep * v->laplacian();
+    } else {
+      f0(index) = v->velocity;
+    }
+    // laps(index) = delta_u;
+    // laps.push_back(delta_u);
     v->be_index = index;
     index++;
   }
@@ -168,7 +173,12 @@ void Mesh::backward_euler(float timestep, float damping_factor) {
     do {
       adj_v = hiter->next()->vertex();
       adj_idx = adj_v->be_index;
-      lapmat(cur_idx, adj_idx) = v->laplacian_ij(adj_v) - damping_factor * v->velocity;
+      float wij = v->laplacian_ij(adj_v) - damping_factor * v->velocity;
+
+      if(wij != 0) {
+        float lap = v->laplacian() - damping_factor * v->velocity;
+        lapmat(cur_idx, adj_idx) = wij / lap;
+      }
       hiter = hiter->next()->next()->twin();
     } while(hiter != v->halfedge());
   }
@@ -177,13 +187,29 @@ void Mesh::backward_euler(float timestep, float damping_factor) {
   VectorXf fh = A.partialPivLu().solve(f0);
 
   for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
-    v->offset = fh(v->be_index);
-    v->velocity = v->velocity + timestep * laps(v->be_index);
+    v->velocity = fh(v->be_index);
+    v->offset = v->offset + timestep * v->velocity;
   }
 }
 
 void Mesh::crank_nicolson(float timestep, float damping_factor) {
+  // This is the average of Forward and Backward Euler integrators
 
+  Mesh::forward_euler(timestep, damping_factor);
+
+  vector<float> vels;
+  vector<float> offs;
+  for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
+    vels.push_back(v->velocity);
+    offs.push_back(v->offset);
+  }
+
+  Mesh::backward_euler(timestep, damping_factor);
+
+  for(VertexIter v = mesh.verticesBegin(); v != mesh.verticesEnd(); v++) {
+    v->velocity = (v->velocity + vels[v->be_index]) / 2.0f;
+    v->offset = (v->offset + offs[v->be_index]) / 2.0f;
+  }
 
 }
 

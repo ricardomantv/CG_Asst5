@@ -689,11 +689,14 @@ namespace CMU462 {
   {
     // Implement Me! (Task 4)
     HalfedgeCIter hiter = this->halfedge();
-    double laplacian = 0.0;
+    float laplacian = 0.0;
+    std::cout << "lap_i: " << this->be_index << endl;
     do {
       VertexCIter j = hiter->next()->vertex();
       VertexCIter a = hiter->next()->next()->vertex();
       VertexCIter b = hiter->twin()->next()->next()->vertex();
+
+      std::cout << "sub_j: " << j->be_index << endl;
 
       Vector3D ia = this->position - a->position;
       Vector3D ib = this->position - b->position;
@@ -705,26 +708,11 @@ namespace CMU462 {
       double cotan_a = cos(aij) / sin(aij);
       double cotan_b = cos(bij) / sin(bij);
 
-      /*
-      std::cout << "ia = " << ia << endl;
-      std::cout << "ib = " << ib << endl;
-      std::cout << "ja = " << ja << endl;
-      std::cout << "jb = " << jb << endl;
-      std::cout << "aij = " << aij << endl;
-      std::cout << "bij = " << bij << endl;
-      std::cout << "cotan_a = " << cotan_a << endl;
-      std::cout << "cotan_b = " << cotan_b << endl;
-      std::cout << "j offset = " << j->offset << endl;
-      std::cout << "cur offset = " << this->offset << endl;
-      */
-
-
-      laplacian += (cotan_a + cotan_b) * (j->offset - this->offset);
+      float sub_lap = (cotan_a + cotan_b) * (j->offset - this->offset);
+      laplacian += sub_lap;
 
       hiter = hiter->next()->next()->twin();
     } while(hiter != this->halfedge());
-
-    // xstd::cout << endl;
 
     laplacian *= 0.5;
     return laplacian;
